@@ -32,6 +32,7 @@ export class AnthropicProvider implements AIProvider {
 	async chat(systemPrompt: string, userMessage: string): Promise<string> {
 		const messages: AnthropicMessage[] = [
 			{ role: "user", content: userMessage },
+			{ role: "assistant", content: "{" },
 		];
 
 		const response = await fetch(`${this.baseUrl}/v1/messages`, {
@@ -63,6 +64,7 @@ export class AnthropicProvider implements AIProvider {
 			throw new Error("Anthropic returned empty response");
 		}
 
-		return textBlock.text;
+		// Prepend "{" since we used assistant prefill starting with "{"
+		return `{${textBlock.text}`;
 	}
 }

@@ -5,15 +5,78 @@ import { Motion } from "../../domain/enums/Motion.ts";
 import { Tempo } from "../../domain/enums/Tempo.ts";
 
 /**
+ * Attempt to extract a JSON object string from a messy AI response.
+ * Handles markdown code fences, leading/trailing text, etc.
+ */
+function extractJsonString(raw: string): string {
+	let cleaned = raw.trim();
+
+	// 1. Try stripping markdown code fences (```json ... ``` or ``` ... ```)
+	const fenceMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+	if (fenceMatch?.[1]) {
+		cleaned = fenceMatch[1].trim();
+	}
+
+	// 2. If that didn't yield something starting with {, try to find the JSON object
+	if (!cleaned.startsWith("{")) {
+		const braceStart = cleaned.indexOf("{");
+		if (braceStart !== -1) {
+			cleaned = cleaned.slice(braceStart);
+		}
+	}
+
+	// 3. Find the matching closing brace (handle nested braces)
+	if (cleaned.startsWith("{")) {
+		let depth = 0;
+		let inString = false;
+		let escaped = false;
+		for (let i = 0; i < cleaned.length; i++) {
+			const ch = cleaned[i];
+			if (escaped) {
+				escaped = false;
+				continue;
+			}
+			if (ch === "\\") {
+				escaped = true;
+				continue;
+			}
+			if (ch === '"') {
+				inString = !inString;
+				continue;
+			}
+			if (inString) continue;
+			if (ch === "{") depth++;
+			else if (ch === "}") {
+				depth--;
+				if (depth === 0) {
+					cleaned = cleaned.slice(0, i + 1);
+					break;
+				}
+			}
+		}
+	}
+
+	return cleaned;
+}
+
+/**
+ * Normalize JSON keys: replace spaces with underscores so
+ * "ascii art" → "ascii_art", "color palette" → "color_palette", etc.
+ */
+function normalizeKeys(obj: Record<string, unknown>): Record<string, unknown> {
+	const result: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(obj)) {
+		const normalizedKey = key.replace(/\s+/g, "_").toLowerCase();
+		result[normalizedKey] = value;
+	}
+	return result;
+}
+
+/**
  * Parse the AI visualization response containing ASCII art + animation parameters.
  */
 export function parseVisualizationResponse(raw: string): DreamSpec {
-	let cleaned = raw.trim();
-
-	// Strip markdown code fences if present
-	if (cleaned.startsWith("```")) {
-		cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
-	}
+	const cleaned = extractJsonString(raw);
 
 	let parsed: Record<string, unknown>;
 	try {
@@ -23,6 +86,9 @@ export function parseVisualizationResponse(raw: string): DreamSpec {
 			`Failed to parse AI response as JSON: ${cleaned.slice(0, 200)}...`,
 		);
 	}
+
+	// Normalize keys to handle variations like "ascii art" vs "ascii_art"
+	parsed = normalizeKeys(parsed);
 
 	return {
 		asciiArt: parseStringArray(parsed.ascii_art, [

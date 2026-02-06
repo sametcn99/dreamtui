@@ -52,6 +52,7 @@ export class GoogleProvider implements AIProvider {
 					generationConfig: {
 						temperature: 0.7,
 						maxOutputTokens: 4000,
+						responseMimeType: "application/json",
 					},
 				}),
 			});
