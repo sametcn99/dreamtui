@@ -18,6 +18,8 @@ export interface ProviderPreset {
 	readonly type: ProviderType;
 	/** Whether an API key is required (false for local providers) */
 	readonly requiresApiKey: boolean;
+	/** Whether the provider supports response_format JSON mode */
+	readonly supportsJsonMode: boolean;
 	/** Short description shown in the UI */
 	readonly description: string;
 }
@@ -30,6 +32,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "gpt-4o-mini",
 		type: "openai-compatible",
 		requiresApiKey: true,
+		supportsJsonMode: true,
 		description: "GPT-4o, GPT-4o-mini, o1, o3-mini",
 	},
 	{
@@ -39,6 +42,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "claude-sonnet-4-20250514",
 		type: "anthropic",
 		requiresApiKey: true,
+		supportsJsonMode: false,
 		description: "Claude Sonnet, Opus, Haiku",
 	},
 	{
@@ -48,6 +52,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "gemini-2.0-flash",
 		type: "google",
 		requiresApiKey: true,
+		supportsJsonMode: true,
 		description: "Gemini 2.0 Flash, Pro, etc.",
 	},
 	{
@@ -57,6 +62,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "llama-3.3-70b-versatile",
 		type: "openai-compatible",
 		requiresApiKey: true,
+		supportsJsonMode: true,
 		description: "Ultra-fast inference, Llama, Mixtral",
 	},
 	{
@@ -66,6 +72,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "anthropic/claude-sonnet-4",
 		type: "openai-compatible",
 		requiresApiKey: true,
+		supportsJsonMode: true,
 		description: "Multi-provider gateway, 100+ models",
 	},
 	{
@@ -75,6 +82,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
 		type: "openai-compatible",
 		requiresApiKey: true,
+		supportsJsonMode: true,
 		description: "Open-source models, fast inference",
 	},
 	{
@@ -84,6 +92,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "deepseek-chat",
 		type: "openai-compatible",
 		requiresApiKey: true,
+		supportsJsonMode: true,
 		description: "DeepSeek V3, R1",
 	},
 	{
@@ -93,6 +102,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "llama3.2",
 		type: "openai-compatible",
 		requiresApiKey: false,
+		supportsJsonMode: false,
 		description: "Local models, no API key needed",
 	},
 	{
@@ -102,6 +112,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "local-model",
 		type: "openai-compatible",
 		requiresApiKey: false,
+		supportsJsonMode: false,
 		description: "Local models via LM Studio",
 	},
 	{
@@ -111,6 +122,7 @@ export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
 		defaultModel: "",
 		type: "openai-compatible",
 		requiresApiKey: true,
+		supportsJsonMode: false,
 		description: "Any OpenAI-compatible endpoint",
 	},
 ] as const;

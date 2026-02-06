@@ -25,13 +25,15 @@ export function createProvider(config: Readonly<AppConfig>): AIProvider {
 		);
 	}
 
+	const useJsonMode = preset?.supportsJsonMode ?? false;
+
 	switch (providerType) {
 		case "anthropic":
 			return new AnthropicProvider(apiKey, baseUrl, model);
 		case "google":
 			return new GoogleProvider(apiKey, baseUrl, model);
 		default:
-			return new OpenAIProvider(apiKey, baseUrl, model);
+			return new OpenAIProvider(apiKey, baseUrl, model, useJsonMode);
 	}
 }
 

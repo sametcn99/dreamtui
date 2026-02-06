@@ -24,11 +24,18 @@ export class OpenAIProvider implements AIProvider {
 	private readonly apiKey: string;
 	private readonly baseUrl: string;
 	private readonly model: string;
+	private readonly useJsonMode: boolean;
 
-	constructor(apiKey: string, baseUrl: string, model: string) {
+	constructor(
+		apiKey: string,
+		baseUrl: string,
+		model: string,
+		useJsonMode = true,
+	) {
 		this.apiKey = apiKey;
 		this.baseUrl = baseUrl.replace(/\/+$/, ""); // strip trailing slashes
 		this.model = model;
+		this.useJsonMode = useJsonMode;
 	}
 
 	async chat(systemPrompt: string, userMessage: string): Promise<string> {
@@ -48,7 +55,9 @@ export class OpenAIProvider implements AIProvider {
 				messages,
 				temperature: 0.7,
 				max_tokens: 4000,
-				response_format: { type: "json_object" },
+				...(this.useJsonMode && {
+					response_format: { type: "json_object" },
+				}),
 			}),
 		});
 
