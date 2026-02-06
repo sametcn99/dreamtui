@@ -4,19 +4,13 @@
 
 DreamTUI transforms your written dreams into full-screen, animated ASCII art experiences. It uses a sophisticated two-stage AI pipeline to interpret the semantics of your dream and generate a procedural visualization that plays out directly in your terminal.
 
-```text
-  ____                        _____ _   _ ___
- |  _ \ _ __ ___  __ _ _ __ |_   _| | | |_ _|
- | | | | '__/ _ \/ _` | '_ \  | | | | | || |
- | |_| | | |  __/ (_| | | | | | | | |_| || |
- |____/|_|  \___|\__,_|_| |_| |_|  \___/|___|
-```
-
 ![Main Screen](assets/main-screen.png)
 
-## Features
+> [!IMPORTANT]
+> This is an experimental hobby project created to test the concept of AI-driven ASCII visualization. It is currently in a prototype stage (and frankly, it will probably stay that way forever). However, the project is open source and **contributions are highly welcome**!
 
-> This is an experimental hobby project created to test the concept of AI-driven ASCII dream visualization. It is currently in a prototype stage (and frankly, it will probably stay that way forever). However, the project is open source and **contributions are highly welcome**!
+
+## Features
 
 - **AI-Powered Interpretation**:
   - **Dream Booster**: Enhances simple inputs into vivid, descriptive narratives.
