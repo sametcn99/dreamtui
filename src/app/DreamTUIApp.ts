@@ -9,11 +9,12 @@ import {
 import { Engine } from "../core/Engine.ts";
 import { ConfigStore } from "../infrastructure/ConfigStore.ts";
 import { InputScreen } from "../tui/InputScreen.ts";
+import { LoadingScreen } from "../tui/LoadingScreen.ts";
 import { MainScreen } from "../tui/MainScreen.ts";
 import { SettingsScreen } from "../tui/SettingsScreen.ts";
 import type { TUIScreen } from "../tui/TUIScreen.ts";
 
-type AppScreen = "input" | "main" | "settings";
+type AppScreen = "input" | "loading" | "main" | "settings";
 
 /**
  * DreamTUIApp — Top-level application orchestrator.
@@ -43,7 +44,7 @@ export class DreamTUIApp {
 			targetFps: 30,
 		});
 		this.renderer.start();
-		this.renderer.setBackgroundColor("#050510");
+		this.renderer.setBackgroundColor("#050102");
 
 		// Handle resize
 		this.renderer.on("resize", (w, h) => {
@@ -68,8 +69,6 @@ export class DreamTUIApp {
 			this.activeScreen = null;
 		}
 
-		this.currentScreenName = name;
-
 		switch (name) {
 			case "input":
 				this.showInputScreen();
@@ -83,13 +82,19 @@ export class DreamTUIApp {
 		}
 	}
 
-	private showInputScreen(): void {
-		const screen = new InputScreen();
+	private showInputScreen(state?: {
+		readonly initialText?: string;
+		readonly initialStatus?: {
+			readonly message: string;
+			readonly isError?: boolean;
+		};
+	}): void {
+		const screen = new InputScreen(state);
 
 		screen.onEvent(async (event) => {
 			switch (event.type) {
 				case "submit":
-					await this.onDreamSubmit(screen, event.text);
+					await this.onDreamSubmit(event.text);
 					break;
 				case "open-settings":
 					this.showScreen("settings");
@@ -99,6 +104,18 @@ export class DreamTUIApp {
 
 		screen.attach(this.renderer);
 		this.activeScreen = screen;
+	}
+
+	private showLoadingScreen(dreamText: string): LoadingScreen {
+		if (this.activeScreen) {
+			this.activeScreen.detach(this.renderer);
+			this.activeScreen = null;
+		}
+
+		const screen = new LoadingScreen(dreamText);
+		screen.attach(this.renderer);
+		this.activeScreen = screen;
+		return screen;
 	}
 
 	private showSettingsScreen(): void {
@@ -154,23 +171,27 @@ export class DreamTUIApp {
 
 		screen.attach(this.renderer);
 		this.activeScreen = screen;
-		this.currentScreenName = "main";
 	}
 
 	// --- Dream Pipeline (Two-Stage AI) ---
 
-	private async onDreamSubmit(
-		screen: InputScreen,
-		dreamText: string,
-	): Promise<void> {
+	private async onDreamSubmit(dreamText: string): Promise<void> {
+		const fallbackToInput = (message: string, isError = true) => {
+			this.showInputScreen({
+				initialText: dreamText,
+				initialStatus: { message, isError },
+			});
+		};
+
 		// Validate provider config
 		const validation = validateProvider(this.configStore.get());
 		if (!validation.valid) {
-			screen.setStatus(validation.error ?? "Invalid configuration", true);
+			fallbackToInput(validation.error ?? "Invalid configuration");
 			return;
 		}
 
-		screen.setLoading(true, "✦ Enhancing your dream...");
+		const loadingScreen = this.showLoadingScreen(dreamText);
+		loadingScreen.setPhase("opening the fracture in the signal...");
 
 		try {
 			// Create the AI provider from config
@@ -181,23 +202,27 @@ export class DreamTUIApp {
 			const boostedText = await booster.boost(dreamText);
 
 			// Update loading status for stage 2
-			screen.setLoading(true, "✦ Creating ASCII visualization...");
+			loadingScreen.setPhase("carving the dream into corrupted glyphs...");
 
 			// ── Stage 2: Generate ASCII art + animation parameters ──
 			const interpreter = new DreamInterpreter(provider);
 			const spec = await interpreter.interpret(boostedText);
 
 			// Transition to animation
-			screen.setLoading(false);
 			this.showScreen("main");
 			this.showMainScreen();
 			this.engine.startDream(spec, dreamText);
 		} catch (error) {
-			screen.setLoading(false);
 			const message =
 				error instanceof Error ? error.message : "Unknown error occurred";
-			screen.setStatus(`Error: ${message}`, true);
+			loadingScreen.setError(message);
+			await this.delay(1200);
+			fallbackToInput(`Error: ${message}`);
 		}
+	}
+
+	private delay(ms: number): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
 	// --- Cleanup ---

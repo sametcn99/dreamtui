@@ -96,8 +96,8 @@ export class SettingsScreen implements TUIScreen {
 		// Title
 		this.title = new TextRenderable(renderer, {
 			id: "settings-title",
-			content: "⚙  Settings",
-			fg: RGBA.fromHex("#9966ff"),
+			content: "RITUAL CONFIG",
+			fg: RGBA.fromHex("#ff315c"),
 			attributes: 1,
 			position: "absolute",
 			left: leftOffset,
@@ -109,7 +109,7 @@ export class SettingsScreen implements TUIScreen {
 		this.sep = new TextRenderable(renderer, {
 			id: "settings-sep",
 			content: "─".repeat(panelWidth),
-			fg: RGBA.fromHex("#333355"),
+			fg: RGBA.fromHex("#4d1f22"),
 			position: "absolute",
 			left: leftOffset,
 			top: 2,
@@ -122,7 +122,7 @@ export class SettingsScreen implements TUIScreen {
 		this.providerLabel = new TextRenderable(renderer, {
 			id: "lbl-provider",
 			content: "Provider:",
-			fg: RGBA.fromHex("#8888aa"),
+			fg: RGBA.fromHex("#b28f74"),
 			position: "absolute",
 			left: leftOffset,
 			top: row,
@@ -149,14 +149,14 @@ export class SettingsScreen implements TUIScreen {
 			selectedIndex: currentIndex >= 0 ? currentIndex : 0,
 			showDescription: true,
 			wrapSelection: true,
-			backgroundColor: "#0a0a14",
-			textColor: "#8888cc",
-			focusedBackgroundColor: "#1a1a3a",
-			focusedTextColor: "#ccccff",
-			selectedBackgroundColor: "#2a1a4a",
-			selectedTextColor: "#bb88ff",
-			descriptionColor: "#555577",
-			selectedDescriptionColor: "#9977cc",
+			backgroundColor: "#12070a",
+			textColor: "#d4c3ae",
+			focusedBackgroundColor: "#2b1116",
+			focusedTextColor: "#fff2d6",
+			selectedBackgroundColor: "#4a151e",
+			selectedTextColor: "#8cff4f",
+			descriptionColor: "#7c6458",
+			selectedDescriptionColor: "#ff9b78",
 			position: "absolute",
 			left: leftOffset + 1,
 			top: row,
@@ -190,7 +190,7 @@ export class SettingsScreen implements TUIScreen {
 		this.apiKeyLabel = new TextRenderable(renderer, {
 			id: "lbl-apikey",
 			content: "API Key:",
-			fg: RGBA.fromHex("#8888aa"),
+			fg: RGBA.fromHex("#b28f74"),
 			position: "absolute",
 			left: leftOffset,
 			top: row,
@@ -203,7 +203,7 @@ export class SettingsScreen implements TUIScreen {
 			width: panelWidth - 2,
 			placeholder: "sk-...",
 			value: this.apiKeyValue,
-			focusedBackgroundColor: "#0a0a14",
+			focusedBackgroundColor: "#12070a",
 			position: "absolute",
 			left: leftOffset + 1,
 			top: row,
@@ -216,7 +216,7 @@ export class SettingsScreen implements TUIScreen {
 		this.baseUrlLabel = new TextRenderable(renderer, {
 			id: "lbl-baseurl",
 			content: "API Base URL:",
-			fg: RGBA.fromHex("#8888aa"),
+			fg: RGBA.fromHex("#b28f74"),
 			position: "absolute",
 			left: leftOffset,
 			top: row,
@@ -229,7 +229,7 @@ export class SettingsScreen implements TUIScreen {
 			width: panelWidth - 2,
 			placeholder: "https://api.openai.com/v1",
 			value: this.baseUrlValue,
-			focusedBackgroundColor: "#0a0a14",
+			focusedBackgroundColor: "#12070a",
 			position: "absolute",
 			left: leftOffset + 1,
 			top: row,
@@ -242,7 +242,7 @@ export class SettingsScreen implements TUIScreen {
 		this.modelLabel = new TextRenderable(renderer, {
 			id: "lbl-model",
 			content: "Model:",
-			fg: RGBA.fromHex("#8888aa"),
+			fg: RGBA.fromHex("#b28f74"),
 			position: "absolute",
 			left: leftOffset,
 			top: row,
@@ -255,7 +255,7 @@ export class SettingsScreen implements TUIScreen {
 			width: panelWidth - 2,
 			placeholder: "gpt-4o-mini",
 			value: this.modelValue,
-			focusedBackgroundColor: "#0a0a14",
+			focusedBackgroundColor: "#12070a",
 			position: "absolute",
 			left: leftOffset + 1,
 			top: row,
@@ -281,7 +281,7 @@ export class SettingsScreen implements TUIScreen {
 		this.providerInfoText = new TextRenderable(renderer, {
 			id: "settings-provider",
 			content: this.getProviderInfoText(),
-			fg: RGBA.fromHex("#666688"),
+			fg: RGBA.fromHex("#8b7666"),
 			position: "absolute",
 			left: leftOffset,
 			top: row,
@@ -292,7 +292,7 @@ export class SettingsScreen implements TUIScreen {
 		this.urlInfoText = new TextRenderable(renderer, {
 			id: "settings-url",
 			content: `URL: ${this.baseUrlValue || "(Default)"}`,
-			fg: RGBA.fromHex("#666688"),
+			fg: RGBA.fromHex("#8b7666"),
 			position: "absolute",
 			left: leftOffset,
 			top: row,
@@ -302,10 +302,11 @@ export class SettingsScreen implements TUIScreen {
 		// Instructions
 		this.instructions = new TextRenderable(renderer, {
 			id: "settings-instructions",
-			content: "[Tab] Next field  ·  [Ctrl+S] Save all  ·  [Esc] Back",
-			fg: RGBA.fromHex("#444466"),
+			content:
+				"[Tab] next socket  ·  [Ctrl+S] seal config  ·  [Esc] abort ritual",
+			fg: RGBA.fromHex("#5d5146"),
 			position: "absolute",
-			left: Math.max(2, Math.floor(w / 2 - 28)),
+			left: Math.max(2, Math.floor(w / 2 - 37)),
 			top: h - 2,
 		});
 		this.container.add(this.instructions);
@@ -393,7 +394,7 @@ export class SettingsScreen implements TUIScreen {
 		if (this.urlInfoText) this.urlInfoText.left = leftOffset;
 
 		if (this.instructions) {
-			this.instructions.left = Math.max(2, Math.floor(width / 2 - 28));
+			this.instructions.left = Math.max(2, Math.floor(width / 2 - 37));
 			this.instructions.top = height - 2;
 		}
 	}
@@ -450,12 +451,12 @@ export class SettingsScreen implements TUIScreen {
 			// If not required, show green
 			if (notRequired) {
 				this.infoText.content = "✓ No API key required";
-				this.infoText.fg = RGBA.fromHex("#44ff88");
+				this.infoText.fg = RGBA.fromHex("#8cff4f");
 			}
 			// If required and we have a NEW key entered
 			else if (hasKey) {
 				this.infoText.content = "✓ API key entered";
-				this.infoText.fg = RGBA.fromHex("#44ff88");
+				this.infoText.fg = RGBA.fromHex("#8cff4f");
 			}
 			// If required, we don't have a new key, BUT we are on the SAME provider as config
 			// and config has a key
@@ -464,10 +465,10 @@ export class SettingsScreen implements TUIScreen {
 				this.currentConfig.apiKey
 			) {
 				this.infoText.content = "✓ API key saved";
-				this.infoText.fg = RGBA.fromHex("#44ff88");
+				this.infoText.fg = RGBA.fromHex("#8cff4f");
 			} else {
 				this.infoText.content = "✗ No API key entered";
-				this.infoText.fg = RGBA.fromHex("#ff6644");
+				this.infoText.fg = RGBA.fromHex("#ff315c");
 			}
 		}
 

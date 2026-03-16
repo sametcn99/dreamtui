@@ -1,0 +1,135 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  detect-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      changed: ${{ steps.version.outputs.changed }}
+      tag_exists: ${{ steps.version.outputs.tag_exists }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect package version change
+        id: version
+        shell: bash
+        run: |
+          current_version=$(node -p "require('./package.json').version")
+          before_sha="${{ github.event.before }}"
+          previous_version=""
+
+          if [[ "$before_sha" != "0000000000000000000000000000000000000000" ]] && git cat-file -e "${before_sha}:package.json" 2>/dev/null; then
+            previous_version=$(git show "${before_sha}:package.json" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
+          fi
+
+          changed=false
+          if [[ "$current_version" != "$previous_version" ]]; then
+            changed=true
+          fi
+
+          tag_exists=false
+          if git ls-remote --exit-code --tags origin "refs/tags/${current_version}" >/dev/null 2>&1; then
+            tag_exists=true
+          fi
+
+          echo "version=$current_version" >> "$GITHUB_OUTPUT"
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          echo "tag_exists=$tag_exists" >> "$GITHUB_OUTPUT"
+
+  build-binaries:
+    needs: detect-version
+    if: needs.detect-version.outputs.changed == 'true' && needs.detect-version.outputs.tag_exists == 'false'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            bun_target: bun-linux-x64-modern
+            archive_name: dreamtui-linux-x64.tar.gz
+            binary_name: dreamtui
+          - os: windows-latest
+            bun_target: bun-windows-x64-modern
+            archive_name: dreamtui-windows-x64.zip
+            binary_name: dreamtui.exe
+          - os: macos-13
+            bun_target: bun-darwin-x64-modern
+            archive_name: dreamtui-macos-x64.tar.gz
+            binary_name: dreamtui
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build bundle
+        run: bun run build
+
+      - name: Compile executable
+        shell: bash
+        run: |
+          mkdir -p release
+          bun build ./index.ts --compile --target=${{ matrix.bun_target }} --outfile ./release/${{ matrix.binary_name }}
+
+      - name: Package unix binary
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          chmod +x ./release/${{ matrix.binary_name }}
+          tar -czf ./release/${{ matrix.archive_name }} -C ./release ${{ matrix.binary_name }}
+
+      - name: Package windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path ./release/${{ matrix.binary_name }} -DestinationPath ./release/${{ matrix.archive_name }} -Force
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.archive_name }}
+          path: ./release/${{ matrix.archive_name }}
+          if-no-files-found: error
+
+  create-release:
+    needs:
+      - detect-version
+      - build-binaries
+    if: needs.detect-version.outputs.changed == 'true' && needs.detect-version.outputs.tag_exists == 'false'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-assets
+          merge-multiple: true
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.detect-version.outputs.version }}
+          name: ${{ needs.detect-version.outputs.version }}
+          generate_release_notes: true
+          files: ./release-assets/*

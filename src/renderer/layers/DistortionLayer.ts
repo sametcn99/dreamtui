@@ -59,9 +59,99 @@ export class DistortionLayer implements RenderLayer {
 			}
 		}
 
+		if (strength >= 0.35) {
+			this.applyHorizontalTearing(grid, time, seed, strength);
+		}
+
+		this.applyScanlineFlicker(grid, time, seed, strength);
+
 		// Apply character mutation at high distortion
 		if (strength >= 0.7) {
 			this.applyCharacterGlitch(grid, time, seed, strength);
+		}
+
+		if (strength >= 0.85) {
+			this.applySignalDropouts(grid, time, seed, strength);
+		}
+	}
+
+	private applyHorizontalTearing(
+		grid: Grid,
+		time: number,
+		seed: number,
+		strength: number,
+	): void {
+		const snapshot: Array<{ char: string; fg: string; bg: string }> = [];
+		for (let y = 0; y < grid.height; y++) {
+			for (let x = 0; x < grid.width; x++) {
+				snapshot.push(grid.getCell(x, y));
+			}
+		}
+
+		const bandCount = Math.max(1, Math.floor(2 + strength * 4));
+		for (let band = 0; band < bandCount; band++) {
+			const baseY = Math.floor(
+				(Math.sin(seed * 0.37 + band * 1.91 + time * (2 + band)) * 0.5 + 0.5) *
+					(grid.height - 1),
+			);
+			const bandHeight = Math.max(1, Math.floor(1 + strength * 3));
+			const shift = Math.round(
+				Math.sin(time * (8 + band * 2) + seed * 0.11 + band) * strength * 8,
+			);
+
+			for (let y = baseY; y < Math.min(grid.height, baseY + bandHeight); y++) {
+				for (let x = 0; x < grid.width; x++) {
+					const srcX = x - shift;
+					if (srcX < 0 || srcX >= grid.width) {
+						grid.setCell(x, y, x % 2 === 0 ? "#" : " ", "#ff335a");
+						continue;
+					}
+
+					const src = snapshot[y * grid.width + srcX];
+					if (src) {
+						grid.setCell(x, y, src.char, src.fg, src.bg);
+					}
+				}
+			}
+		}
+	}
+
+	private applyScanlineFlicker(
+		grid: Grid,
+		time: number,
+		seed: number,
+		strength: number,
+	): void {
+		const activeBand = Math.floor(
+			(Math.sin(time * 6 + seed * 0.3) * 0.5 + 0.5) *
+				Math.max(1, grid.height - 1),
+		);
+
+		for (let y = 0; y < grid.height; y++) {
+			const isScanline = y % 2 === 0;
+			const isHotBand = Math.abs(y - activeBand) <= 1;
+			const dimFactor = Math.max(0.55, 0.9 - strength * 0.18);
+
+			for (let x = 0; x < grid.width; x++) {
+				const cell = grid.getCell(x, y);
+				if (cell.char === " ") {
+					if (isHotBand && Math.sin(x * 0.9 + time * 12 + seed) > 0.8) {
+						grid.setCell(x, y, "_", "#8cff4f");
+					}
+					continue;
+				}
+
+				if (isScanline) {
+					grid.setCell(x, y, cell.char, this.tint(cell.fg, dimFactor));
+				}
+
+				if (
+					isHotBand &&
+					Math.sin(x * 1.7 + time * 15 + seed) > 0.8 - strength * 0.08
+				) {
+					grid.setCell(x, y, cell.char, this.tint(cell.fg, 1.35));
+				}
+			}
 		}
 	}
 
@@ -164,8 +254,22 @@ export class DistortionLayer implements RenderLayer {
 		seed: number,
 		strength: number,
 	): void {
-		const glitchChars = ["█", "▓", "▒", "░", "╳", "╬", "┼", "≡", "≋"];
-		const glitchRate = (strength - 0.7) * 0.15; // up to ~4.5% at max
+		const glitchChars = [
+			"█",
+			"▓",
+			"▒",
+			"░",
+			"╳",
+			"╬",
+			"┼",
+			"≡",
+			"≋",
+			"#",
+			"%",
+			"&",
+		];
+		const glitchPalette = ["#ff335a", "#ff8a00", "#8cff4f", "#f6f1d1"];
+		const glitchRate = (strength - 0.7) * 0.22;
 
 		for (let y = 0; y < grid.height; y++) {
 			for (let x = 0; x < grid.width; x++) {
@@ -177,8 +281,36 @@ export class DistortionLayer implements RenderLayer {
 					const ci = Math.floor(prob * 100) % glitchChars.length;
 					const glitchChar = glitchChars[ci] ?? glitchChars[0];
 					if (glitchChar) {
-						grid.setCell(x, y, glitchChar, "#ff3366");
+						const color =
+							glitchPalette[Math.floor((prob * 1000) % glitchPalette.length)] ??
+							"#ff335a";
+						grid.setCell(x, y, glitchChar, color);
 					}
+				}
+			}
+		}
+	}
+
+	private applySignalDropouts(
+		grid: Grid,
+		time: number,
+		seed: number,
+		strength: number,
+	): void {
+		const dropoutBand = Math.floor(
+			(Math.cos(time * 5 + seed) * 0.5 + 0.5) * Math.max(1, grid.width - 1),
+		);
+
+		for (let y = 0; y < grid.height; y++) {
+			for (let x = 0; x < grid.width; x++) {
+				const distance = Math.abs(x - dropoutBand);
+				if (distance > 1) continue;
+
+				const phase = Math.sin(y * 1.4 + time * 16 + seed * 0.5);
+				if (phase > 0.45 + (1 - strength) * 0.2) {
+					grid.setCell(x, y, " ", "#000000", "#000000");
+				} else if (phase < -0.75) {
+					grid.setCell(x, y, "|", "#ff244c");
 				}
 			}
 		}
@@ -193,5 +325,15 @@ export class DistortionLayer implements RenderLayer {
 			[Distortion.Extreme]: 1.0,
 		};
 		return map[distortion] ?? 0.5;
+	}
+
+	private tint(hex: string, factor: number): string {
+		const r = Number.parseInt(hex.slice(1, 3), 16);
+		const g = Number.parseInt(hex.slice(3, 5), 16);
+		const b = Number.parseInt(hex.slice(5, 7), 16);
+		const tr = Math.max(0, Math.min(255, Math.floor(r * factor)));
+		const tg = Math.max(0, Math.min(255, Math.floor(g * factor)));
+		const tb = Math.max(0, Math.min(255, Math.floor(b * factor)));
+		return `#${tr.toString(16).padStart(2, "0")}${tg.toString(16).padStart(2, "0")}${tb.toString(16).padStart(2, "0")}`;
 	}
 }

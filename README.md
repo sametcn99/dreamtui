@@ -4,11 +4,8 @@
 
 DreamTUI transforms your written dreams into full-screen, animated ASCII art experiences. It uses a sophisticated two-stage AI pipeline to interpret the semantics of your dream and generate a procedural visualization that plays out directly in your terminal.
 
-![Main Screen](assets/main-screen.png)
-
 > [!IMPORTANT]
 > This is an experimental hobby project created to test the concept of AI-driven ASCII visualization. It is currently in a prototype stage (and frankly, it will probably stay that way forever). However, the project is open source and **contributions are highly welcome**!
-
 
 ## Features
 
@@ -63,6 +60,13 @@ DreamTUI transforms your written dreams into full-screen, animated ASCII art exp
    bun start
    ```
 
+## Releases
+
+Pushes to `main` or `master` automatically compare the current `package.json` version with the previous commit.
+
+- If the version did not change, the release workflow exits without publishing.
+- If the version changed, GitHub Actions builds the project, compiles standalone binaries for Windows, Ubuntu, and macOS, and publishes a GitHub Release whose tag matches the `package.json` version exactly.
+
 ## Usage
 
 ### 1. The Input Screen
@@ -86,8 +90,6 @@ Once generated, the visualization will start automatically.
 ### 3. Settings Configuration
 
 Access settings by pressing `Ctrl+S` on the Input Screen.
-
-![Settings Screen](assets/settings-screen.png)
 
 - **Provider**: Select your preferred AI backend (e.g., OpenAI, Anthropic).
 - **API Key**: Enter your API key securely (stored locally).

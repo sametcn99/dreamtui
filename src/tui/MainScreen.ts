@@ -19,6 +19,7 @@ type MainScreenHandler = (event: MainScreenEvent) => void;
 export class MainScreen implements TUIScreen {
 	private statusText: TextRenderable | null = null;
 	private controlsText: TextRenderable | null = null;
+	private warningText: TextRenderable | null = null;
 	private keyHandler: ((key: KeyEvent) => void) | null = null;
 	private handlers: MainScreenHandler[] = [];
 
@@ -39,22 +40,33 @@ export class MainScreen implements TUIScreen {
 		// Status bar (top-right)
 		this.statusText = new TextRenderable(renderer, {
 			id: "main-status",
-			content: "▶ DREAMING",
-			fg: RGBA.fromHex("#44ff88"),
+			content: "LIVE SIGNAL",
+			fg: RGBA.fromHex("#8cff4f"),
 			position: "absolute",
-			left: w - 16,
+			left: w - 14,
 			top: 0,
 			zIndex: 200,
 		});
 		renderer.root.add(this.statusText);
 
+		this.warningText = new TextRenderable(renderer, {
+			id: "main-warning",
+			content: "UNSTABLE FEED // ASCII HALLUCINATION ACTIVE",
+			fg: RGBA.fromHex("#ff315c"),
+			position: "absolute",
+			left: 1,
+			top: 0,
+			zIndex: 200,
+		});
+		renderer.root.add(this.warningText);
+
 		// Controls hint (bottom)
 		this.controlsText = new TextRenderable(renderer, {
 			id: "main-controls",
-			content: "[Space] Pause  ·  [R] Restart  ·  [Esc] Exit",
-			fg: RGBA.fromHex("#333355"),
+			content: "[Space] freeze  ·  [R] relapse  ·  [Esc] sever feed",
+			fg: RGBA.fromHex("#5d5146"),
 			position: "absolute",
-			left: Math.max(0, Math.floor(w / 2 - 23)),
+			left: Math.max(0, Math.floor(w / 2 - 29)),
 			top: h - 1,
 			zIndex: 200,
 		});
@@ -79,10 +91,10 @@ export class MainScreen implements TUIScreen {
 
 	onResize(width: number, height: number): void {
 		if (this.statusText) {
-			this.statusText.left = width - 16;
+			this.statusText.left = width - 14;
 		}
 		if (this.controlsText) {
-			this.controlsText.left = Math.max(0, Math.floor(width / 2 - 23));
+			this.controlsText.left = Math.max(0, Math.floor(width / 2 - 29));
 			this.controlsText.top = height - 1;
 		}
 	}
@@ -92,16 +104,16 @@ export class MainScreen implements TUIScreen {
 
 		switch (state) {
 			case "running":
-				this.statusText.content = "▶ DREAMING";
-				this.statusText.fg = RGBA.fromHex("#44ff88");
+				this.statusText.content = "LIVE SIGNAL";
+				this.statusText.fg = RGBA.fromHex("#8cff4f");
 				break;
 			case "paused":
-				this.statusText.content = "❚❚ PAUSED";
-				this.statusText.fg = RGBA.fromHex("#ffaa44");
+				this.statusText.content = "FEED FROZEN";
+				this.statusText.fg = RGBA.fromHex("#ffb347");
 				break;
 			case "stopped":
-				this.statusText.content = "■ STOPPED";
-				this.statusText.fg = RGBA.fromHex("#ff4444");
+				this.statusText.content = "BLACKOUT";
+				this.statusText.fg = RGBA.fromHex("#ff315c");
 				break;
 		}
 	}
@@ -118,6 +130,10 @@ export class MainScreen implements TUIScreen {
 		if (this.controlsText) {
 			this.controlsText.destroy();
 			this.controlsText = null;
+		}
+		if (this.warningText) {
+			this.warningText.destroy();
+			this.warningText = null;
 		}
 	}
 }
