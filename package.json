@@ -1,6 +1,6 @@
 {
 	"name": "dreamtui",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "A terminal-based generative dream engine — transforms user-written dreams into full-screen, animated ASCII experiences.",
 	"module": "index.ts",
 	"type": "module",
