@@ -65,7 +65,7 @@ DreamTUI transforms your written dreams into full-screen, animated ASCII art exp
 Pushes to `main` or `master` automatically compare the current `package.json` version with the previous commit.
 
 - If the version did not change, the release workflow exits without publishing.
-- If the version changed, GitHub Actions builds the project, compiles standalone binaries for Windows, Ubuntu, and macOS, and publishes a GitHub Release whose tag matches the `package.json` version exactly.
+- If the version changed, GitHub Actions builds the project, compiles standalone binaries for Windows, Ubuntu, and macOS, and publishes those binaries directly to a GitHub Release whose tag matches the `package.json` version exactly.
 
 ## Usage
 

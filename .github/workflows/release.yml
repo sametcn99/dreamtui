@@ -58,15 +58,15 @@ jobs:
         include:
           - os: ubuntu-latest
             bun_target: bun-linux-x64-modern
-            archive_name: dreamtui-linux-x64.tar.gz
+            asset_name: dreamtui-linux-x64
             binary_name: dreamtui
           - os: windows-latest
             bun_target: bun-windows-x64-modern
-            archive_name: dreamtui-windows-x64.zip
+            asset_name: dreamtui-windows-x64.exe
             binary_name: dreamtui.exe
-          - os: macos-13
+          - os: macos-15-intel
             bun_target: bun-darwin-x64-modern
-            archive_name: dreamtui-macos-x64.tar.gz
+            asset_name: dreamtui-macos-x64
             binary_name: dreamtui
 
     runs-on: ${{ matrix.os }}
@@ -92,24 +92,19 @@ jobs:
           mkdir -p release
           bun build ./index.ts --compile --target=${{ matrix.bun_target }} --outfile ./release/${{ matrix.binary_name }}
 
-      - name: Package unix binary
-        if: runner.os != 'Windows'
+      - name: Normalize asset name
         shell: bash
         run: |
-          chmod +x ./release/${{ matrix.binary_name }}
-          tar -czf ./release/${{ matrix.archive_name }} -C ./release ${{ matrix.binary_name }}
-
-      - name: Package windows binary
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Compress-Archive -Path ./release/${{ matrix.binary_name }} -DestinationPath ./release/${{ matrix.archive_name }} -Force
+          if [[ "${{ runner.os }}" != "Windows" ]]; then
+            chmod +x ./release/${{ matrix.binary_name }}
+          fi
+          mv ./release/${{ matrix.binary_name }} ./release/${{ matrix.asset_name }}
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.archive_name }}
-          path: ./release/${{ matrix.archive_name }}
+          name: ${{ matrix.asset_name }}
+          path: ./release/${{ matrix.asset_name }}
           if-no-files-found: error
 
   create-release:
